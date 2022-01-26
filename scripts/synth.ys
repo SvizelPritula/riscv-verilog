@@ -1,0 +1,18 @@
+read_verilog src/*.v
+
+proc
+flatten cpu
+synth -top cpu
+opt
+clean -purge
+
+abc -liberty scripts/gates.lib
+opt
+
+read_verilog scripts/nor.v
+flatten cpu
+clean
+
+select cpu
+
+write_verilog -selected bin/synth.v

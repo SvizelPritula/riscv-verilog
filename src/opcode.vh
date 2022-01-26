@@ -1,0 +1,45 @@
+`define OPCODE_LOAD 7'b0000011 // I
+`define OPCODE_MISC_MEM 7'b0001111 // I
+`define OPCODE_OP_IMM 7'b0010011 // I
+`define OPCODE_AUIPC 7'b0010111 // U
+`define OPCODE_STORE 7'b0100011 // S
+`define OPCODE_OP 7'b0110011 // R
+`define OPCODE_LUI 7'b0110111 // U
+`define OPCODE_BRANCH 7'b1100011 // B
+`define OPCODE_JALR 7'b1100111 // I
+`define OPCODE_JAL 7'b1101111 // J
+`define OPCODE_SYSTEM 7'b1110011 // I
+
+`define FUNCT3_ADD 3'b000
+`define FUNCT3_SLL 3'b001
+`define FUNCT3_SLT 3'b010
+`define FUNCT3_SLTU 3'b011
+`define FUNCT3_XOR 3'b100
+`define FUNCT3_SRL 3'b101
+`define FUNCT3_OR 3'b110
+`define FUNCT3_AND 3'b111
+
+`define FUNCT3_BEQ 3'b000
+`define FUNCT3_BNE 3'b001
+`define FUNCT3_BLT 3'b100
+`define FUNCT3_BGE 3'b101
+`define FUNCT3_BLTU 3'b110
+`define FUNCT3_BGEU 3'b111
+
+`define FUNCT3_B 3'b000
+`define FUNCT3_H 3'b001
+`define FUNCT3_W 3'b010
+`define FUNCT3_BU 3'b100
+`define FUNCT3_HU 3'b101
+
+`define FUNCT3_FENCE 3'b000
+
+`define FUNCT7_NORMAL 7'b0000000
+`define FUNCT7_ALTERNATE 7'b0100000
+
+`define TYPE_R 3'b000
+`define TYPE_I 3'b001
+`define TYPE_S 3'b010
+`define TYPE_B 3'b011
+`define TYPE_U 3'b100
+`define TYPE_J 3'b101
