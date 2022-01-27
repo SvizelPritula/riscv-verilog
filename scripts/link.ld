@@ -16,12 +16,15 @@ SECTIONS
         _text_start = .;
         *(.text.start) *(.text) *(.text.*)
         _text_end = .;
+        
         _init_array_start = .;
         *(.init_array) *(.init_array.*)
         _init_array_end = .;
+
         _rodata_start = .;
         *(.rodata) *(.rodata.*)
         _rodata_end = .;
+
         _eh_frame_start = .;
         *(.eh_frame) *(.eh_frame.*)
         _eh_frame_end = .;
