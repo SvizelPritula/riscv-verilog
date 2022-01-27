@@ -1,57 +1,67 @@
 #include <print.h>
 #include <stdbool.h>
 
-void printNumber(unsigned int n) {
-    char digits[10];
-    int i = 0;
-
-    while (n > 0) {
-        digits[i++] = '0' + (n % 10);
-        n /= 10;
-    }
-
-    if (i == 0) print('0');
-
-    while (i > 0) {
-        print(digits[--i]);
-    }
-}
-
-void printString(char *string) {
-    while (*string != 0) {
-        print(*string++);
-    }
-}
-
-int primes[100] = {2};
-int primeCount = 1;
-
-bool isPrime(int n)
+char getHexDigit(unsigned char d)
 {
-    for (int i = 0; i < primeCount; i++)
+    if (d < 10)
+        return '0' + d;
+    else
+        return 'a' - 10 + d;
+}
+
+void printNumberHex(unsigned int n)
+{
+    char digits[8];
+
+    for (int i = 0; i < 8; i++)
     {
-        if (n % primes[i] == 0)
-        {
-            return false;
-        }
+        int digit = n & 0xf;
+        digits[i] = getHexDigit(digit);
+
+        n >>= 4;
     }
 
-    return true;
+    for (int i = 7; i >= 0; i--)
+    {
+        print(digits[i]);
+    }
+
+    print('\n');
 }
+
+void printArrayHex(unsigned char *array, int length)
+{
+    for (int i = 0; i < length; i++)
+    {
+        unsigned char b = *(array + i);
+
+        print(getHexDigit(b >> 4));
+        print(getHexDigit(b & 0xf));
+    }
+
+    print('\n');
+}
+
+void fillArray(unsigned char *array, int length, unsigned char value)
+{
+    for (int i = 0; i < length; i++)
+    {
+        *(array + i) = value;
+    }
+}
+
+unsigned char read_data[] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef};
+unsigned char write_data[8];
 
 void main()
 {
-    printString("The first 50 primes are:\n");
-    printString("2\n");
-
-    for (int i = 3; primeCount < 50; i += 2)
+    for (unsigned char *p = read_data; p <= read_data + sizeof(read_data) - sizeof(int); p++)
     {
-        if (isPrime(i))
-        {
-            printNumber(i);
-            print('\n');
-
-            primes[primeCount++] = i;
-        }
+        printNumberHex(*(int *)p);
     }
+
+    fillArray(write_data, sizeof(write_data), 0);
+    *(int*)(write_data + 2) = 0x12345678;
+
+    printArrayHex(write_data, sizeof(write_data));
 }

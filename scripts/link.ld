@@ -14,14 +14,14 @@ SECTIONS
     ALIGN (4)
     {
         _text_start = .;
-        *(.text.start) *(.text) *(.text.*)
+        *(.text.start) *(.text) *(.text.*) *(.rodata) *(.rodata.*)
         _text_end = .;
     } > rom
 .bss :
     ALIGN (4)
     {
         _bss_start = .;
-        *(.bss.stack) *(.bss) *(.bss.*) *(COMMON)
+        *(.bss.stack) *(.bss) *(.bss.*) *(.sbss) *(.sbss.*) *(COMMON)
         _bss_end = .;
     } > ram
 .data :
@@ -29,7 +29,7 @@ SECTIONS
     ALIGN (4)
     {
         _data_start = .;
-        *(.data) *(.data.*) *(.sdata) *(.sdata.*) *(.rodata) *(.rodata.*)
+        *(.data) *(.data.*) *(.sdata) *(.sdata.*)
         _data_end = .;
     } > ram
 }

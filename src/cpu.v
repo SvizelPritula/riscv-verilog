@@ -1,6 +1,7 @@
 `include "opcode.vh"
-`define STATE_FETCH 1'b0
-`define STATE_EXECUTE 1'b1
+`define STATE_FETCH 2'b00
+`define STATE_EXECUTE 2'b10
+`define STATE_EXECUTE2 2'b11
 
 module cpu (
     input wire clk,
@@ -8,12 +9,12 @@ module cpu (
     input wire [31:0] memory_out,
     output wire [31:0] memory_in,
     output wire [31:2] address,
-    output reg [3:0] write_enable,
+    output wire [3:0] write_enable,
     input wire read_capable,
     input wire write_capable
 );
 
-reg [0:0] state;
+reg [1:0] state;
 reg [31:2] ip;
 reg [31:0] registers [31:1];
 
@@ -95,33 +96,21 @@ always @(posedge clk) begin
                 instruction <= memory_out;
                 state <= `STATE_EXECUTE;
             end
+
             `STATE_EXECUTE: begin
                 case (opcode)
                     `OPCODE_LOAD: begin
                         if (!memory_error && read_capable) begin
-                            value = memory_out >> (8 * access_address[1:0]);
-
-                            case (funct3)
-                                `FUNCT3_B: begin
-                                    if (rd > 5'd0) registers[rd] <= {{24{value[7]}}, value[7:0]};
-                                end
-                                `FUNCT3_H: begin
-                                    if (rd > 5'd0) registers[rd] <= {{16{value[15]}}, value[15:0]};
-                                end
-                                `FUNCT3_W: begin
-                                    if (rd > 5'd0) registers[rd] <= value;
-                                end
-                                `FUNCT3_BU: begin
-                                    if (rd > 5'd0) registers[rd] <= {24'd0, value[7:0]};
-                                end
-                                `FUNCT3_HU: begin
-                                    if (rd > 5'd0) registers[rd] <= {16'd0, value[15:0]};
-                                end
-                            endcase
-
-                            ip <= ip + 1;
+                            if (access_mask[7:4] != 4'd0) begin
+                                state <= `STATE_EXECUTE2;
+                            end else begin
+                                ip <= ip + 1;
+                                if (rd > 5'd0) registers[rd] <= read_value_extended;
+                                state <= `STATE_FETCH;
+                            end
                         end else begin
                             error <= 1;
+                            state <= `STATE_FETCH;
                         end
                     end
                     `OPCODE_MISC_MEM: begin
@@ -140,20 +129,32 @@ always @(posedge clk) begin
                             default: error <= 1;
                         endcase
                         ip <= ip + 1;
+                        
+                        state <= `STATE_FETCH;
                     end
                     `OPCODE_OP_IMM: begin
                         if (rd > 5'd0) registers[rd] <= alu_result;
                         ip <= ip + 1;
+                        
+                        state <= `STATE_FETCH;
                     end
                     `OPCODE_AUIPC: begin
                         if (rd > 5'd0) registers[rd] <= imm_u + {ip, 2'b00};
                         ip <= ip + 1;
+                        
+                        state <= `STATE_FETCH;
                     end
                     `OPCODE_STORE: begin
                         if (!memory_error && write_capable) begin
-                            ip <= ip + 1;
+                            if (access_mask[7:4] != 4'd0) begin
+                                state <= `STATE_EXECUTE2;
+                            end else begin
+                                ip <= ip + 1;
+                                state <= `STATE_FETCH;
+                            end
                         end else begin
                             error <= 1;
+                            state <= `STATE_FETCH;
                         end
                     end
                     `OPCODE_OP: begin
@@ -163,10 +164,14 @@ always @(posedge clk) begin
                         end else begin
                             error <= 1;
                         end
+                        
+                        state <= `STATE_FETCH;
                     end
                     `OPCODE_LUI: begin
                         if (rd > 5'd0) registers[rd] <= imm_u;
                         ip <= ip + 1;
+                        
+                        state <= `STATE_FETCH;
                     end
                     `OPCODE_BRANCH: begin
                         target = {ip, 2'b00} + imm_b;
@@ -182,6 +187,8 @@ always @(posedge clk) begin
                         end else begin
                             ip <= ip + 1;
                         end
+                        
+                        state <= `STATE_FETCH;
                     end
                     `OPCODE_JALR: begin
                         target = (rs1_value + imm_i) & 32'hfffffffe;
@@ -192,6 +199,8 @@ always @(posedge clk) begin
                         end else begin
                             error <= 1;
                         end
+
+                        state <= `STATE_FETCH;
                     end
                     `OPCODE_JAL: begin
                         target = {ip, 2'b00} + imm_j;
@@ -202,9 +211,32 @@ always @(posedge clk) begin
                         end else begin
                             error <= 1;
                         end
+
+                        state <= `STATE_FETCH;
                     end
                     default: begin
                         error <= 1;
+                        state <= `STATE_FETCH;
+                    end
+                endcase
+            end
+
+            `STATE_EXECUTE2: begin
+                case (opcode)
+                    `OPCODE_LOAD: begin
+                        if (!memory_error && read_capable) begin
+                            ip <= ip + 1;
+                            if (rd > 5'd0) registers[rd] <= read_value_extended;
+                        end else begin
+                            error <= 1;
+                        end
+                    end
+                    `OPCODE_STORE: begin
+                        if (!memory_error && write_capable) begin
+                            ip <= ip + 1;
+                        end else begin
+                            error <= 1;
+                        end
                     end
                 endcase
 
@@ -215,35 +247,55 @@ always @(posedge clk) begin
 end
 
 wire [31:0] access_address = (opcode == `OPCODE_STORE ? imm_s : imm_i) + rs1_value;
-assign address = state == `STATE_FETCH ? ip : access_address[31:2];
+assign address = state == `STATE_FETCH ? ip : (access_address[31:2] + (state == `STATE_EXECUTE2 ? 1 : 0));
 
-assign memory_in = rs2_value << (8 * access_address[1:0]);
+reg [3:0] access_width;
+wire [7:0] access_mask = { 4'd0, access_width } << access_address[1:0];
+wire do_write = opcode == `OPCODE_STORE && write_capable && (state == `STATE_EXECUTE || state == `STATE_EXECUTE2);
+assign write_enable = do_write ? (state == `STATE_EXECUTE ? access_mask[3:0] : access_mask[7:4]) : 4'd0;
 
-always @(opcode, funct3, access_address, write_capable) begin
-    if (opcode == `OPCODE_STORE && write_capable) begin
-        case (funct3)
-            `FUNCT3_B: begin
-                write_enable = 4'b0001 << (access_address[1:0]);
-            end
-            `FUNCT3_H: begin
-                if (access_address[0] == 1'b0) begin
-                    write_enable = 4'b0011 << (access_address[1:0]);
-                end else begin
-                    write_enable = 4'b0000;
-                end
-            end
-            `FUNCT3_W: begin
-                if (access_address[1:0] == 2'b0) begin
-                    write_enable = 4'b1111;
-                end else begin
-                    write_enable = 4'b0000;
-                end
-            end
-            default: write_enable = 4'b0000;
-        endcase
-    end else begin
-        write_enable = 4'b0000;
+always @(funct3) begin
+    case (funct3[1:0])
+        `FUNCT3_B: access_width = 4'b0001;
+        `FUNCT3_H: access_width = 4'b0011;
+        `FUNCT3_W: access_width = 4'b1111;
+        default: access_width = 4'b0000;
+    endcase
+end
+
+wire [63:0] memory_in_full = { 32'd0, rs2_value } << (8 * access_address[1:0]);
+assign memory_in = state == `STATE_EXECUTE ? memory_in_full[31:0] : memory_in_full[63:32];
+
+reg [31:0] memory_first_read;
+
+always @(posedge clk) begin
+    if (state == `STATE_EXECUTE) begin
+        memory_first_read <= memory_out;
     end
+end
+
+wire [3:0] read_mask_first = access_mask[3:0] >> access_address[1:0];
+
+wire [31:0] read_value_first = (state == `STATE_EXECUTE ? memory_out : memory_first_read) >> (8 * access_address[1:0]);
+wire [31:0] read_value_second = memory_out << (8 * (4 - access_address[1:0]));
+
+wire [31:0] read_value;
+assign read_value[7:0] = read_mask_first[0] ? read_value_first[7:0] : read_value_second[7:0];
+assign read_value[15:8] = read_mask_first[1] ? read_value_first[15:8] : read_value_second[15:8];
+assign read_value[23:16] = read_mask_first[2] ? read_value_first[23:16] : read_value_second[23:16];
+assign read_value[31:24] = read_mask_first[3] ? read_value_first[31:24] : read_value_second[31:24];
+
+reg [31:0] read_value_extended;
+
+always @(funct3, read_value) begin
+    case (funct3)
+        `FUNCT3_B: read_value_extended = {{24{read_value[7]}}, read_value[7:0]};
+        `FUNCT3_H: read_value_extended = {{16{read_value[15]}}, read_value[15:0]};
+        `FUNCT3_W: read_value_extended = read_value;
+        `FUNCT3_BU: read_value_extended = {24'd0, read_value[7:0]};
+        `FUNCT3_HU: read_value_extended = {16'd0, read_value[15:0]};
+        default: read_value_extended = 32'd0;
+    endcase
 end
 
 reg memory_error;
@@ -252,10 +304,10 @@ always @(opcode, funct3, access_address) begin
     if (opcode == `OPCODE_STORE || opcode == `OPCODE_LOAD) begin
         case (funct3)
             `FUNCT3_B: memory_error = 0;
-            `FUNCT3_H: memory_error = access_address[0] != 1'b0;
-            `FUNCT3_W: memory_error = access_address[1:0] != 2'b0;
+            `FUNCT3_H: memory_error = 0;
+            `FUNCT3_W: memory_error = 0;
             `FUNCT3_BU: memory_error = opcode == `OPCODE_STORE;
-            `FUNCT3_HU: memory_error = access_address[0] != 1'b0 || opcode == `OPCODE_STORE;
+            `FUNCT3_HU: memory_error = opcode == `OPCODE_STORE;
             default: memory_error = 1;
         endcase
     end else begin
