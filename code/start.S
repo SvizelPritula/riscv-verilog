@@ -30,6 +30,22 @@ zero_loop:
 
 zero_done:
     la sp, stack_end - 4
+    la s0, _init_array_start
+    la s1, _init_array_end
+    li s3, 0xffffffff
+
+init_loop:
+    bgeu s0, s1, init_done
+    lw s2, (s0)
+    beqz s2, init_continue
+    beq s2, s3, init_continue
+    jalr ra, (s2)
+    
+init_continue:
+    addi s0, s0, 4
+    j init_loop
+
+init_done:
     jal ra, main
 
     la t0, _halt

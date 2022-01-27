@@ -10,14 +10,23 @@ MEMORY
 
 SECTIONS
 {
-.text :
+.text 0x0:
     ALIGN (4)
     {
         _text_start = .;
-        *(.text.start) *(.text) *(.text.*) *(.rodata) *(.rodata.*)
+        *(.text.start) *(.text) *(.text.*)
         _text_end = .;
+        _init_array_start = .;
+        *(.init_array) *(.init_array.*)
+        _init_array_end = .;
+        _rodata_start = .;
+        *(.rodata) *(.rodata.*)
+        _rodata_end = .;
+        _eh_frame_start = .;
+        *(.eh_frame) *(.eh_frame.*)
+        _eh_frame_end = .;
     } > rom
-.bss :
+.bss 0x80000000:
     ALIGN (4)
     {
         _bss_start = .;
@@ -34,5 +43,5 @@ SECTIONS
     } > ram
 }
 
-_data_init_start = _text_end;
-_data_init_end = _text_end + SIZEOF ( .data );
+_data_init_start = ADDR(.text) + SIZEOF ( .text );
+_data_init_end = ADDR(.text) + SIZEOF ( .text ) + SIZEOF ( .data );
