@@ -4,6 +4,6 @@ endmodule
 
 module BUF(input A, output Y);
 wire X;
-NOR a(.A(A), .Y(X));
-NOR b(.A(X), .Y(Y));
+NOT a(.A(A), .Y(X));
+NOT b(.A(X), .Y(Y));
 endmodule
