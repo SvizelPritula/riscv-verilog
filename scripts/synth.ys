@@ -2,6 +2,10 @@ read_verilog src/*.v
 
 proc
 flatten cpu
+memory
+techmap
+opt
+
 synth -top cpu
 opt
 clean -purge
@@ -9,10 +13,12 @@ clean -purge
 abc -liberty scripts/gates.lib
 opt
 
-read_verilog scripts/nor.v
+read_verilog scripts/not.v
 flatten cpu
+opt
 clean
 
 select cpu
 
 write_verilog -selected bin/synth.v
+write_blif -top cpu bin/synth.blif

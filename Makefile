@@ -15,7 +15,7 @@ synth: make_bin
 	yosys scripts/synth.ys
 
 build_synth: synth create_progmem
-	iverilog -g2012 -I src/ bin/synth.v test/*.v bin/progmem.v -o bin/test
+	iverilog -g2012 -I src/ bin/synth.v scripts/nor.v test/*.v bin/progmem.v -o bin/test
 
 run_synth: build_synth
 	./bin/test
