@@ -1,3 +1,6 @@
+(*blackbox*) module NOR(input A, input B, output Y);
+endmodule
+
 module NOT(input A, output Y);
 NOR a (.A(A), .B(A), .Y(Y));
 endmodule
