@@ -7,6 +7,11 @@ int max(int a, int b)
     return a > b ? a : b;
 }
 
+int min(int a, int b)
+{
+    return a < b ? a : b;
+}
+
 int abs(int n)
 {
     return n < 0 ? -n : n;
@@ -54,6 +59,13 @@ void printGraph(graphFunction callback, int xStart, int xEnd, int yStart, int yE
     int xDigits = max(countDigits(xStart), countDigits(xEnd));
     int yDigits = max(countDigits(yStart), countDigits(yEnd));
 
+    int values[xEnd - xStart + 1];
+
+    for (int x = xStart; x <= xEnd; x++)
+    {
+        values[x - xStart] = callback(x);
+    }
+
     for (int y = yEnd; y >= yStart; y--)
     {
         for (int d = 0; d < yDigits; d++)
@@ -65,7 +77,19 @@ void printGraph(graphFunction callback, int xStart, int xEnd, int yStart, int yE
 
         for (int x = xStart; x <= xEnd; x++)
         {
-            if (callback(x) == y)
+            bool isFilled = values[x - xStart] == y;
+
+            if (x > xStart && y < values[x - xStart] && y > values[x - xStart - 1])
+            {
+                isFilled = true;
+            }
+
+            if (x < xEnd && y < values[x - xStart] && y > values[x - xStart + 1])
+            {
+                isFilled = true;
+            }
+
+            if (isFilled)
             {
                 print('#');
             }
@@ -109,10 +133,10 @@ void printGraph(graphFunction callback, int xStart, int xEnd, int yStart, int yE
 
 int func(int x)
 {
-    return 2 + x / 2;
+    return (x * x * x + 20 * x * x - 275 * x - 3750) / 200;
 }
 
 int main()
 {
-    printGraph(func, -10, 10, -10, 10);
+    printGraph(func, -30, 30, -30, 30);
 }
