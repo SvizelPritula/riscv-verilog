@@ -1,6 +1,6 @@
 read_verilog src/*.v
 
-synth -top cpu
+synth -flatten -top cpu
 flatten cpu
 
 abc -liberty scripts/gates.lib
