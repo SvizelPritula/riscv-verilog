@@ -1,4 +1,4 @@
-read_verilog src/*.v
+read_verilog -Isrc/ src/*.v
 
 synth -flatten -top cpu
 flatten cpu
