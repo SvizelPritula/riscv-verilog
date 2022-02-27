@@ -193,7 +193,7 @@ always @(posedge clk) begin
                     `OPCODE_JALR: begin
                         target = (rs1_value + imm_i) & 32'hfffffffe;
 
-                        if (target[1:0] == 2'd0) begin
+                        if (target[1:0] == 2'd0 && funct3 == 3'd0) begin
                             ip <= target[31:2];
                             if (rd > 5'd0) registers[rd] <= {ip + 30'd1, 2'b00};
                         end else begin
