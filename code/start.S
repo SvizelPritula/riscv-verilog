@@ -48,8 +48,8 @@ init_continue:
 init_done:
     jal ra, main
 
-    la t0, _power
-    sw t0, (t0)
+    lui t0, %hi(_power)
+    sw t0, %lo(_power)(t0)
 
 .section .bss.stack
 stack_start:

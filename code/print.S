@@ -4,6 +4,6 @@
 _out = 0xffff0000
 
 print:
-    la t0, _out
-    sw a0, (t0)
+    lui t0, %hi(_out)
+    sw a0, %lo(_out)(t0)
     ret
