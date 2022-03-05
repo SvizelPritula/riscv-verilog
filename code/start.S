@@ -2,7 +2,7 @@
 .global _start
 .weak main
 
-_halt = 0xffff0004
+_power = 0xffff0004
 
 _start:
     la t0, _data_init_start
@@ -48,7 +48,7 @@ init_continue:
 init_done:
     jal ra, main
 
-    la t0, _halt
+    la t0, _power
     sw t0, (t0)
 
 .section .bss.stack
