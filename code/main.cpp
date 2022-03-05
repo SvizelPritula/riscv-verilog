@@ -59,7 +59,7 @@ void printGraph(graphFunction callback, int xStart, int xEnd, int yStart, int yE
     int xDigits = max(countDigits(xStart), countDigits(xEnd));
     int yDigits = max(countDigits(yStart), countDigits(yEnd));
 
-    int values[xEnd - xStart + 1];
+    short values[xEnd - xStart + 1];
 
     for (int x = xStart; x <= xEnd; x++)
     {
@@ -138,5 +138,5 @@ int func(int x)
 
 int main()
 {
-    printGraph(func, -30, 30, -30, 30);
+    printGraph(func, -30, 30, -25, 25);
 }

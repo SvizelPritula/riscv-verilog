@@ -5,7 +5,7 @@ reg rst;
 wire [31:0] memory_in;
 wire [31:0] memory_out;
 wire [31:2] address;
-wire [3:0] write_enable;
+wire write_enable;
 wire write_capable;
 wire read_capable;
 

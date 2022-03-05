@@ -9,7 +9,7 @@ module cpu (
     input wire [31:0] memory_out,
     output wire [31:0] memory_in,
     output wire [31:2] address,
-    output wire [3:0] write_enable,
+    output wire write_enable,
     input wire read_capable,
     input wire write_capable
 );
@@ -78,7 +78,6 @@ branch_evaluator branch_evaluator (
 );
 
 integer i;
-reg [31:0] value;
 reg [31:0] target;
 
 always @(posedge clk) begin
@@ -252,7 +251,8 @@ assign address = state == `STATE_FETCH ? ip : (access_address[31:2] + (state == 
 reg [3:0] access_width;
 wire [7:0] access_mask = { 4'd0, access_width } << access_address[1:0];
 wire do_write = opcode == `OPCODE_STORE && write_capable && (state == `STATE_EXECUTE || state == `STATE_EXECUTE2);
-assign write_enable = do_write ? (state == `STATE_EXECUTE ? access_mask[3:0] : access_mask[7:4]) : 4'd0;
+wire [3:0] write_enable_bytes = do_write ? (state == `STATE_EXECUTE ? access_mask[3:0] : access_mask[7:4]) : 4'd0;
+assign write_enable = write_enable_bytes != 0;
 
 always @(funct3) begin
     case (funct3[1:0])
@@ -264,7 +264,12 @@ always @(funct3) begin
 end
 
 wire [63:0] memory_in_full = { 32'd0, rs2_value } << (8 * access_address[1:0]);
-assign memory_in = state == `STATE_EXECUTE ? memory_in_full[31:0] : memory_in_full[63:32];
+wire [31:0] memory_in_unmasked = state == `STATE_EXECUTE ? memory_in_full[31:0] : memory_in_full[63:32];
+
+assign memory_in[7:0] = write_enable_bytes[0] ? memory_in_unmasked[7:0] : memory_out[7:0];
+assign memory_in[15:8] = write_enable_bytes[1] ? memory_in_unmasked[15:8] : memory_out[15:8];
+assign memory_in[23:16] = write_enable_bytes[2] ? memory_in_unmasked[23:16] : memory_out[23:16];
+assign memory_in[31:24] = write_enable_bytes[3] ? memory_in_unmasked[31:24] : memory_out[31:24];
 
 reg [31:0] memory_first_read;
 

@@ -3,7 +3,7 @@ module memory (
     output reg [31:0] memory_out,
     input wire [31:0] memory_in,
     input wire [31:2] address,
-    input wire [3:0] write_enable,
+    input wire write_enable,
     output reg read_capable,
     output reg write_capable
 );
@@ -18,9 +18,6 @@ reg [1:0] memory_type;
 wire [31:0] progmem_out;
 wire [31:0] ram_out;
 
-wire [3:0] ram_write_enable;
-wire [3:0] io_write_enable;
-
 progmem progmem(
     .memory_out(progmem_out),
     .address(address[19:2])
@@ -31,14 +28,14 @@ ram ram(
     .memory_out(ram_out),
     .memory_in(memory_in),
     .address(address[11:2]),
-    .write_enable(ram_write_enable)
+    .write_enable(memory_type == RAM ? write_enable : 1'b0)
 );
 
 io io(
     .clk(clk),
     .memory_in(memory_in),
     .address(address[2:2]),
-    .write_enable(io_write_enable)
+    .write_enable(memory_type == IO ? write_enable : 1'b0)
 );
 
 always @(address) begin
@@ -61,9 +58,6 @@ always @(memory_type) begin
         NONE: begin read_capable = 0; write_capable = 0; end
     endcase
 end
-
-assign ram_write_enable = memory_type == RAM ? write_enable : 0;
-assign io_write_enable = memory_type == IO ? write_enable : 0;
 
 always @(memory_type, progmem_out, ram_out) begin
     case (memory_type)
