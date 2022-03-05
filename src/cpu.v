@@ -77,6 +77,24 @@ branch_evaluator branch_evaluator (
     .error(branch_evaluator_error)
 );
 
+task raise_error;
+    error <= 1;
+    state <= `STATE_FETCH;
+endtask
+
+task next_instruction;
+    jump_to(ip + 1);
+endtask
+
+task jump_to(input [31:2] address);
+    ip <= address;
+    state <= `STATE_FETCH;
+endtask
+
+task move_to_execute_2;
+    state <= `STATE_EXECUTE2;
+endtask
+
 integer i;
 reg [31:0] target;
 
@@ -101,15 +119,13 @@ always @(posedge clk) begin
                     `OPCODE_LOAD: begin
                         if (!memory_error && read_capable) begin
                             if (access_mask[7:4] != 4'd0) begin
-                                state <= `STATE_EXECUTE2;
+                                move_to_execute_2();
                             end else begin
-                                ip <= ip + 1;
                                 if (rd > 5'd0) registers[rd] <= read_value_extended;
-                                state <= `STATE_FETCH;
+                                next_instruction();
                             end
                         end else begin
-                            error <= 1;
-                            state <= `STATE_FETCH;
+                            raise_error();
                         end
                     end
                     `OPCODE_MISC_MEM: begin
@@ -117,105 +133,85 @@ always @(posedge clk) begin
                             `FUNCT3_FENCE: begin
                                 if (rd == 5'd0 && rs1 == 5'd0) begin
                                     if (instruction[31:28] == 4'b0000 || instruction[31:20] == 12'b100000110011) begin
-                                        ip <= ip + 1;
+                                        next_instruction();
                                     end else begin
-                                        error <= 1;
+                                        raise_error();
                                     end
                                 end else begin
-                                    error <= 1;
+                                    raise_error();
                                 end
                             end
-                            default: error <= 1;
+                            default: raise_error();
                         endcase
-                        ip <= ip + 1;
-                        
-                        state <= `STATE_FETCH;
                     end
                     `OPCODE_OP_IMM: begin
                         if (rd > 5'd0) registers[rd] <= alu_result;
-                        ip <= ip + 1;
-                        
-                        state <= `STATE_FETCH;
+                        next_instruction();
                     end
                     `OPCODE_AUIPC: begin
                         if (rd > 5'd0) registers[rd] <= imm_u + {ip, 2'b00};
-                        ip <= ip + 1;
-                        
-                        state <= `STATE_FETCH;
+                        next_instruction();
                     end
                     `OPCODE_STORE: begin
                         if (!memory_error && write_capable) begin
                             if (access_mask[7:4] != 4'd0) begin
-                                state <= `STATE_EXECUTE2;
+                                move_to_execute_2();
                             end else begin
-                                ip <= ip + 1;
-                                state <= `STATE_FETCH;
+                                next_instruction();
                             end
                         end else begin
-                            error <= 1;
-                            state <= `STATE_FETCH;
+                            raise_error();
                         end
                     end
                     `OPCODE_OP: begin
                         if (!alu_error) begin
                             if (rd > 5'd0) registers[rd] <= alu_result;
-                            ip <= ip + 1;
+                            next_instruction();
                         end else begin
-                            error <= 1;
+                            raise_error();
                         end
-                        
-                        state <= `STATE_FETCH;
                     end
                     `OPCODE_LUI: begin
                         if (rd > 5'd0) registers[rd] <= imm_u;
-                        ip <= ip + 1;
-                        
-                        state <= `STATE_FETCH;
+                        next_instruction();
                     end
                     `OPCODE_BRANCH: begin
                         target = {ip, 2'b00} + imm_b;
 
                         if (branch_evaluator_error) begin
-                            error <= 1;
+                            raise_error();
                         end else if (branch_evaluator_result) begin
                             if (target[1:0] == 2'd0) begin
-                                ip <= target[31:2];
+                                jump_to(target[31:2]);
                             end else begin
-                                error <= 1;
+                                raise_error();
                             end
                         end else begin
-                            ip <= ip + 1;
+                            next_instruction();
                         end
-                        
-                        state <= `STATE_FETCH;
                     end
                     `OPCODE_JALR: begin
                         target = (rs1_value + imm_i) & 32'hfffffffe;
 
                         if (target[1:0] == 2'd0 && funct3 == 3'd0) begin
-                            ip <= target[31:2];
                             if (rd > 5'd0) registers[rd] <= {ip + 30'd1, 2'b00};
+                            jump_to(target[31:2]);
                         end else begin
-                            error <= 1;
+                            raise_error();
                         end
-
-                        state <= `STATE_FETCH;
                     end
                     `OPCODE_JAL: begin
                         target = {ip, 2'b00} + imm_j;
 
                         if (target[1:0] == 2'd0) begin
-                            ip <= target[31:2];
                             if (rd > 5'd0) registers[rd] <= {ip + 30'd1, 2'b00};
+                            jump_to(target[31:2]);
                         end else begin
-                            error <= 1;
+                            raise_error();
                         end
-
-                        state <= `STATE_FETCH;
                     end
                     default: begin
-                        error <= 1;
-                        state <= `STATE_FETCH;
+                        raise_error();
                     end
                 endcase
             end
@@ -224,22 +220,20 @@ always @(posedge clk) begin
                 case (opcode)
                     `OPCODE_LOAD: begin
                         if (!memory_error && read_capable) begin
-                            ip <= ip + 1;
                             if (rd > 5'd0) registers[rd] <= read_value_extended;
+                            next_instruction();
                         end else begin
-                            error <= 1;
+                            raise_error();
                         end
                     end
                     `OPCODE_STORE: begin
                         if (!memory_error && write_capable) begin
-                            ip <= ip + 1;
+                            next_instruction();
                         end else begin
-                            error <= 1;
+                            raise_error();
                         end
                     end
                 endcase
-
-                state <= `STATE_FETCH;
             end
         endcase
     end
@@ -319,5 +313,4 @@ always @(opcode, funct3, access_address) begin
         memory_error = 0;
     end
 end
-    
 endmodule
