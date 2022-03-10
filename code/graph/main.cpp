@@ -1,4 +1,4 @@
-#include <print.hpp>
+#include <lib/print.hpp>
 
 typedef int graphFunction(int x);
 

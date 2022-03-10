@@ -31,11 +31,11 @@ bin/build/%.S.o: code/%.S
 
 bin/build/%.c.o: code/%.c
 	mkdir -p $(@D)
-	riscv64-unknown-elf-gcc -c -mabi=ilp32 -march=rv32i -mstrict-align -ffreestanding -O3 -Icode/lib/ -Icode/${FIRMWARE}/ -o $@ $<
+	riscv64-unknown-elf-gcc -c -mabi=ilp32 -march=rv32i -mstrict-align -ffreestanding -O3 -Icode/ -o $@ $<
 
 bin/build/%.cpp.o: code/%.cpp
 	mkdir -p $(@D)
-	riscv64-unknown-elf-g++ -c -mabi=ilp32 -march=rv32i -mstrict-align -ffreestanding -O3 -Icode/lib/ -Icode/${FIRMWARE}/ -o $@ $<
+	riscv64-unknown-elf-g++ -c -mabi=ilp32 -march=rv32i -mstrict-align -ffreestanding -O3 -Icode/ -o $@ $<
 
 build_firmware: clean_bin_build $(OBJECTS_ASM) $(OBJECTS_C) $(OBJECTS_CPP)
 	riscv64-unknown-elf-gcc -Wl,-M,-T scripts/link.ld -mabi=ilp32 -march=rv32i -nostdlib ${OBJECTS_ASM} ${OBJECTS_C} ${OBJECTS_CPP} -lgcc -o bin/firmware.elf

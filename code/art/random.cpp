@@ -1,6 +1,6 @@
-#include <random.hpp>
 #include <stdint.h>
-#include <print.hpp>
+#include <lib/print.hpp>
+#include <art/random.hpp>
 
 int seed = 0x5bf05398;
 

@@ -1,5 +1,5 @@
-#include <canvas.hpp>
-#include <random.hpp>
+#include <art/canvas.hpp>
+#include <art/random.hpp>
 
 Canvas<64, 16> canvas;
 

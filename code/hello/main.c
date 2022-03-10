@@ -1,4 +1,4 @@
-#include <print.h>
+#include <lib/print.h>
 
 const char message[] = "Hello world!\n";
 
