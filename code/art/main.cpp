@@ -11,8 +11,8 @@ void drawRandomRects()
 {
     for (int i = 0; i < 32; i++)
     {
-        int x = getRandomInt() % (canvas.width() - maxRectSize);
-        int y = getRandomInt() % (canvas.height() - maxRectSize);
+        int x = getRandomInt() % canvas.width();
+        int y = getRandomInt() % canvas.height();
         int width = getRandomInt() % maxRectSize;
         int height = getRandomInt() % maxRectSize;
         char color = palette[getRandomInt() % (sizeof(palette) / sizeof(palette[0]))];
