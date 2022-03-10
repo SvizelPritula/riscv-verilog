@@ -42,7 +42,11 @@ initial begin
 
   forever begin
     #10 clk = 1;
-    // $display("%h %b - %h %b - %h %b (%b)", { address, 2'd0 }, address, memory_out, memory_out, memory_in, memory_in, write_enable);
+
+    `ifdef VERBOSE
+    $display("%h %b - %h %b - %h %b (%b)", { address, 2'd0 }, address, memory_out, memory_out, memory_in, memory_in, write_enable);
+    `endif
+
     #10 clk = 0;
   end
 end

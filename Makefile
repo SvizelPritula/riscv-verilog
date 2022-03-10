@@ -7,8 +7,14 @@ clean_bin_build:
 
 build_sim: make_bin create_progmem
 	iverilog -g2012 -I src/ src/*.v test/*.v bin/progmem.v -o bin/test
-	
+
 run_sim: build_sim
+	./bin/test
+
+build_debug: make_bin create_progmem
+	iverilog -g2012 -DVERBOSE -I src/ src/*.v test/*.v bin/progmem.v -o bin/test
+
+run_debug: build_debug
 	./bin/test
 
 synth: make_bin
@@ -33,10 +39,10 @@ bin/build/%.S.o: code/%.S
 	riscv64-unknown-elf-gcc -c -mabi=ilp32 -march=rv32i -o $@ $<
 
 bin/build/%.c.o: code/%.c
-	riscv64-unknown-elf-gcc -c -mabi=ilp32 -march=rv32i -mstrict-align -O3 -I code/ -o $@ $<
+	riscv64-unknown-elf-gcc -c -mabi=ilp32 -march=rv32i -mstrict-align -ffreestanding -O3 -I code/ -o $@ $<
 
 bin/build/%.cpp.o: code/%.cpp
-	riscv64-unknown-elf-g++ -c -mabi=ilp32 -march=rv32i -mstrict-align -O3 -I code/ -o $@ $<
+	riscv64-unknown-elf-g++ -c -mabi=ilp32 -march=rv32i -mstrict-align -ffreestanding -O3 -I code/ -o $@ $<
 
 build_firmware: clean_bin_build $(OBJECTS_ASM) $(OBJECTS_C) $(OBJECTS_CPP)
 	riscv64-unknown-elf-gcc -Wl,-M,-T scripts/link.ld -mabi=ilp32 -march=rv32i -nostdlib bin/build/*.o -lgcc -o bin/firmware.elf

@@ -13,6 +13,7 @@ always @(posedge clk) begin
         case (address)
             `IO_OUT: begin
                 $write("%c", memory_in[7:0]);
+                $fflush();
             end
             `IO_POWER: begin
                 $finish();

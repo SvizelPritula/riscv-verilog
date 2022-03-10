@@ -22,7 +22,7 @@ SECTIONS
         _init_array_end = .;
 
         _rodata_start = .;
-        *(.rodata) *(.rodata.*)
+        *(.rodata) *(.rodata.*) *(.srodata) *(.srodata.*)
         _rodata_end = .;
 
         _eh_frame_start = .;
