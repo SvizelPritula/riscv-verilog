@@ -3,7 +3,7 @@ make_bin:
 
 clean_bin_build:
 	mkdir -p bin/build
-	rm -r bin/build/*
+	rm -rf bin/build/*
 	
 synth: make_bin
 	yosys scripts/synth.ys
