@@ -38,7 +38,7 @@ bin/build/%.cpp.o: code/%.cpp
 	riscv64-unknown-elf-g++ -march=rv32i -mabi=ilp32 -c -mstrict-align -ffreestanding -O3 -Icode/ -o $@ $<
 
 build_firmware: clean_bin_build $(OBJECTS_ASM) $(OBJECTS_C) $(OBJECTS_CPP)
-	riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -Wl,-M,-T scripts/link.ld -nostdlib ${OBJECTS_ASM} ${OBJECTS_C} ${OBJECTS_CPP} -lgcc -o bin/firmware.elf
+	riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -Wl,-M,-T,scripts/link.ld -nostdlib ${OBJECTS_ASM} ${OBJECTS_C} ${OBJECTS_CPP} -lgcc -o bin/firmware.elf
 	riscv64-unknown-elf-objcopy -O binary bin/firmware.elf bin/firmware.bin
 
 create_progmem: build_firmware
