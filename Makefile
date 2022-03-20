@@ -27,18 +27,18 @@ OBJECTS_CPP := $(patsubst code/%.cpp, bin/build/%.cpp.o, $(SOURCES_CPP))
 
 bin/build/%.S.o: code/%.S
 	mkdir -p $(@D)
-	riscv64-unknown-elf-gcc -c -mabi=ilp32 -march=rv32i -o $@ $<
+	riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -c -o $@ $<
 
 bin/build/%.c.o: code/%.c
 	mkdir -p $(@D)
-	riscv64-unknown-elf-gcc -c -mabi=ilp32 -march=rv32i -mstrict-align -ffreestanding -O3 -Icode/ -o $@ $<
+	riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -c -mstrict-align -ffreestanding -O3 -Icode/ -o $@ $<
 
 bin/build/%.cpp.o: code/%.cpp
 	mkdir -p $(@D)
-	riscv64-unknown-elf-g++ -c -mabi=ilp32 -march=rv32i -mstrict-align -ffreestanding -O3 -Icode/ -o $@ $<
+	riscv64-unknown-elf-g++ -march=rv32i -mabi=ilp32 -c -mstrict-align -ffreestanding -O3 -Icode/ -o $@ $<
 
 build_firmware: clean_bin_build $(OBJECTS_ASM) $(OBJECTS_C) $(OBJECTS_CPP)
-	riscv64-unknown-elf-gcc -Wl,-M,-T scripts/link.ld -mabi=ilp32 -march=rv32i -nostdlib ${OBJECTS_ASM} ${OBJECTS_C} ${OBJECTS_CPP} -lgcc -o bin/firmware.elf
+	riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -Wl,-M,-T scripts/link.ld -nostdlib ${OBJECTS_ASM} ${OBJECTS_C} ${OBJECTS_CPP} -lgcc -o bin/firmware.elf
 	riscv64-unknown-elf-objcopy -O binary bin/firmware.elf bin/firmware.bin
 
 create_progmem: build_firmware
