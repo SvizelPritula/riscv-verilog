@@ -4,7 +4,7 @@ ENTRY(_start)
 
 MEMORY 
 {
-  rom (rx): ORIGIN = 0, LENGTH = 1M
+  rom (rx): ORIGIN = 0x0, LENGTH = 1M
   ram (!r): ORIGIN = 0x80000000, LENGTH = 4K
 }
 
@@ -37,7 +37,7 @@ SECTIONS
         _bss_end = .;
     } > ram
 .data :
-    AT ( ADDR(.text) + SIZEOF ( .text ) )
+    AT (ADDR(.text) + SIZEOF (.text))
     ALIGN (4)
     {
         _data_start = .;
@@ -46,5 +46,5 @@ SECTIONS
     } > ram
 }
 
-_data_init_start = ADDR(.text) + SIZEOF ( .text );
-_data_init_end = ADDR(.text) + SIZEOF ( .text ) + SIZEOF ( .data );
+_data_init_start = ADDR(.text) + SIZEOF (.text);
+_data_init_end = ADDR(.text) + SIZEOF (.text) + SIZEOF (.data);
