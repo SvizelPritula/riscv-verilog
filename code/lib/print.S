@@ -1,7 +1,7 @@
 .section .text
 .global print
 
-_out = 0xffff0000
+.set _out, 0xffff0000
 
 print:
     lui t0, %hi(_out)

@@ -2,7 +2,7 @@
 .global _start
 .weak main
 
-_power = 0xffff0004
+.set _power, 0xffff0004
 
 _start:
     la t0, _data_init_start
@@ -48,7 +48,7 @@ init_done:
     jal ra, main
 
     lui t0, %hi(_power)
-    sw t0, %lo(_power)(t0)
+    sw t0, %lo(_power)(a0)
 
 .section .bss.stack
 stack_start:
