@@ -57,7 +57,7 @@ Multiplier::Multiplier(unsigned int number)
 
     *(ip++) = build_mov(reg_t0, reg_a0);
 
-    if (number & 1 == 0)
+    if ((number & 1) == 0)
     {
         *(ip++) = build_mov(reg_a0, reg_zero);
     }
