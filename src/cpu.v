@@ -131,15 +131,7 @@ always @(posedge clk) begin
                     `OPCODE_MISC_MEM: begin
                         case (funct3)
                             `FUNCT3_FENCE: begin
-                                if (rd == 5'd0 && rs1 == 5'd0) begin
-                                    if (instruction[31:28] == 4'b0000 || instruction[31:20] == 12'b100000110011) begin
-                                        next_instruction();
-                                    end else begin
-                                        raise_error();
-                                    end
-                                end else begin
-                                    raise_error();
-                                end
+                                next_instruction();
                             end
                             default: raise_error();
                         endcase
