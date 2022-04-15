@@ -4,7 +4,7 @@ const char message[] = "Hello world!\n";
 
 int main()
 {
-    for (char *p = message; *p; p++)
+    for (const char *p = message; *p; p++)
     {
         print(*p);
     }
