@@ -1,3 +1,9 @@
+build: make_bin create_progmem $(if ${SIM},,synth)
+	iverilog -g2012 $(if ${VERBOSE},-DVERBOSE) -I src/ $(if ${SIM},src/*.v,bin/synth.v scripts/nor.v) test/*.v bin/progmem.v -o bin/test
+
+run: build
+	./bin/test
+	
 make_bin:
 	mkdir -p bin
 
@@ -7,12 +13,6 @@ clean_bin_build:
 	
 synth: make_bin
 	yosys scripts/synth.ys
-
-build: make_bin create_progmem $(if ${SIM},,synth)
-	iverilog -g2012 $(if ${VERBOSE},-DVERBOSE) -I src/ $(if ${SIM},src/*.v,bin/synth.v scripts/nor.v) test/*.v bin/progmem.v -o bin/test
-
-run: build
-	./bin/test
 
 FIRMWARE ?= art
 
